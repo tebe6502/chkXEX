@@ -174,24 +174,24 @@ getLength_next1:     if i+1>flen then begin ok:=false; Exit end;
                   lz4:=lz4+LenHL;
                   goto unlz4;
 unlz4done:
-    
+
  writeln(ToDec(no,3)+':     $'+Hex(x,4)+' $'+Hex(x+lz4-1,4)+': $'+Hex(lz4,4)+' (LZ4:'+Hex(lz4s,4)+')')
-    
-end;  
+
+end;
 
 
 procedure LoadXEX(fnam: string; mode: ModeType; details: boolean);
 var t, r, a: string;
     h, b, x, y, flen, i, s, no: integer;
     ok: Boolean;
-    tp: char;    
-    
-    
+    tp: char;
+
+
 procedure MADS_BLK;
 var l, n: integer;
 begin
 
-    if h=$FFEE then begin		// MADS BLK UPDATE EXTERNAL	
+    if h=$FFEE then begin		// MADS BLK UPDATE EXTERNAL
 
 	get(5, i);
 
@@ -214,10 +214,10 @@ begin
 	 writeln(ToDec(no,3)+': MADS : '+tp+' $'+Hex(buf[0]+buf[1] shl 8,4)+' '+t+#9+'SYMBOL EXTERNAL');
 	end;
 
-	inc(no);  
+	inc(no);
 
     end;
-     
+
 end;
 
 
@@ -230,14 +230,14 @@ begin
       if i+2>flen then begin ok:=false; Exit end;
       get(2, i);
     end;
-    
+
     x:=buf[0]+buf[1] shl 8;
     if i+2>flen then begin ok:=false; Exit end;
     get(2, i);
     y:=buf[0]+buf[1] shl 8;
-    
-    
-    if y = 0 then 
+
+
+    if y = 0 then
 
      LoadPCK(i, ok, x, no, flen)			// LZ4
 
@@ -251,18 +251,25 @@ begin
     end;
 
 
-    if y <> 0 then 
+    if y <> 0 then
     if (mode=sparta) and (h=$FFFA) then
      writeln(ToDec(no,3)+': @$'+Hex(s,4)+' SDX $'+Hex(x,4)+'-$'+Hex(y,4)+': $'+Hex(y-x+1,4)+'           SPARTA')
     else
      writeln(ToDec(no,3)+': @$'+Hex(s,4)+'     $'+Hex(x,4)+'-$'+Hex(y,4)+': $'+Hex(y-x+1,4));
 
-    if (x<=$2e0) and (y>=$2e1) then writeln('            RUN $'+Hex(buf[0]+buf[1] shl 8,4));
-    if (x<=$2e2) and (y>=$2e3) then writeln('            INI $'+Hex(buf[0]+buf[1] shl 8,4));
+    if (x<=$2e0) and (y>=$2e3) then begin
+     writeln('            RUN $'+Hex(buf[0]+buf[1] shl 8,4));
+     writeln('            INI $'+Hex(buf[2]+buf[3] shl 8,4));
+    end else begin
+
+     if (x<=$2e0) and (y>=$2e1) then writeln('            RUN $'+Hex(buf[0]+buf[1] shl 8,4));
+     if (x<=$2e2) and (y>=$2e3) then writeln('            INI $'+Hex(buf[0]+buf[1] shl 8,4));
+
+    end;
 
 end;
-    
-    
+
+
 procedure SDX_BLK;
 var l, c, n: integer;
 begin
@@ -332,9 +339,9 @@ begin
 
 
 end;
-    
-    
-    
+
+
+
 begin
 
   if not(TestFile(fnam)) then begin
@@ -355,13 +362,13 @@ begin
    writeln('Invalid file header.');
    exit;
   end;
-  
+
   if (h=$ffff) and (buf[2]=0) and (buf[3]=0) and (buf[6]=$4d) and (buf[7]=$52) then begin
    writeln('MADS RELOC not supported.');
    exit;
   end;
- 
-  
+
+
 // odczyt pliku w formacie Atari DOS lub Sparta DOS
 
  reset(plik,1);
@@ -387,7 +394,7 @@ begin
 
   inc(no, 1);
  end;
- 
+
  writeln('     @$'+Hex(i,4)+' EOF');
 
 
