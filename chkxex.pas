@@ -1,13 +1,16 @@
 (*
+
  27.02.2009 - 15.10.2011 by Tebe/Madteam
 
  06.08.2011 -  SDX_BLK: add SDX file information (Mono / Jerzy Kut)
  15.10.2011 - MADS_BLK: add MADS block update external
  01.09.2018 -  SDX_BLK: info o aktualizowanych adresach w blokach relokowanych '-det' (Mono / Jerzy Kut)
  30.12.2019 -  LoadPCK: add LZ4 block (XXL / Krzysztof Dudek)
+ 07.06.2023 - SMB^, Weak Symbol (Mono / Jerzy Kut)
 
  Free Pascal Compiler, http://www.freepascal.org/
  Compile: fpc -Mdelphi -vh -O3 chkxex.pas
+
 *)
 
 program checkXEX;
@@ -271,7 +274,7 @@ end;
 
 
 procedure SDX_BLK;
-var l, c, n: integer;
+var l, c, n: integer; w: char;
 begin
 
   if (mode=sparta) and (h=$FFFE) then begin
@@ -299,7 +302,7 @@ begin
     else r:='RELOC';
     if (b and $40)=$40 then a:='PAGE'
     else a:='BYTE';
-    writeln(ToDec(no,3)+': @$'+Hex(s,4)+' SDX $'+Hex(x,4)+'   #'+Hex(n,1)+': $'+Hex(y,4)+'           '+r+' '+t+' '+a);
+    writeln(ToDec(no,3)+': @$'+Hex(s,4)+' SDX $'+Hex(x,4)+'   #'+Hex(n,1)+': $'+Hex(y,4)+'            '+r+' '+t+' '+a);
   end
   else if (mode=sparta) and (h=$FFFD) then begin
     //sparta addr update block
@@ -309,7 +312,7 @@ begin
     n:=buf[0];
     y:=buf[1]+buf[2] shl 8;
 
-    writeln(ToDec(no,3)+': @$'+Hex(s,4)+' SDX         #'+Hex(n,1)+': $'+Hex(y,4)+'           ADDR UPDATE');
+    writeln(ToDec(no,3)+': @$'+Hex(s,4)+' SDX         #'+Hex(n,1)+': $'+Hex(y,4)+'            ADDR UPDATE');
     if not GetUpdateBlock(flen, i, details) then begin ok:=false; Exit end;
 
   end
@@ -322,17 +325,18 @@ begin
     setlength(t,8); for n:=0 to 7 do t[1+n]:=Chr(buf[3+n]);
     n:=buf[0];
 
-    writeln(ToDec(no,3)+': @$'+Hex(s,4)+' SDX $'+Hex(x,4)+'   #'+Hex(n,1)+':       @'+t+' SYMBOL NEW');
+    writeln(ToDec(no,3)+': @$'+Hex(s,4)+' SDX $'+Hex(x,4)+'   #'+Hex(n,1)+':       @'+t+'  SYMBOL NEW');
   end
   else if (mode=sparta) and (h=$FFFB) then begin
     //sparta symbol update block
     if i+10>flen then begin ok:=false; Exit end;
     get(10, i);
 
-    setlength(t,8); for n:=0 to 7 do t[1+n]:=Chr(buf[n]);
+    if buf[7] >= $80 then w := '^' else w := ' ';
+    setlength(t,8); for n:=0 to 7 do t[1+n]:=Chr(buf[n] and $7f);
     y:=buf[8]+buf[9] shl 8;
 
-    writeln(ToDec(no,3)+': @$'+Hex(s,4)+' SDX            : $'+Hex(y,4)+' @'+t+' SYMBOL UPDATE');
+    writeln(ToDec(no,3)+': @$'+Hex(s,4)+' SDX            : $'+Hex(y,4)+' @'+t+w+' SYMBOL UPDATE');
     if not GetUpdateBlock(flen, i, details) then begin ok:=false; Exit end;
 
   end;
